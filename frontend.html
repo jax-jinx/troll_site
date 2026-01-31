@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Automation Controller</title>
+    <style>
+        /* ==================== CSS RESET & BASE STYLES ==================== */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        /* ==================== MAIN CONTAINER ==================== */
+        
+        .dashboard {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* ==================== HEADER SECTION ==================== */
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        /* ==================== STATUS PANEL ==================== */
+        
+        .status-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .status-header h2 {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        
+        /* Backend connection indicator */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            font-size: 0.95em;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.online {
+            background: #4ade80;
+            box-shadow: 0 0 10px #4ade80;
+        }
+        
+        .status-dot.offline {
+            background: #f87171;
+            box-shadow: 0 0 10px #f87171;
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        /* Last action display */
+        .last-action {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+        
+        .last-action strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .action-text {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        
+        .action-time {
+            font-size: 0.85em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        /* ==================== CONTROL BUTTONS SECTION ==================== */
+        
+        .controls-section {
+            margin-bottom: 30px;
+        }
+        
+        .controls-section h2 {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        /* ==================== ACTION BUTTONS ==================== */
+        
+        .action-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .action-button:active {
+            transform: translateY(-1px);
+        }
+        
+        .action-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Button ripple effect */
+        .action-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .action-button:active::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        /* Icon in button */
+        .button-icon {
+            display: block;
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        
+        .button-text {
+            display: block;
+            font-size: 0.95em;
+        }
+        
+        /* Different button colors for visual distinction */
+        .action-button.danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .action-button.warning {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .action-button.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        /* ==================== ACTIVITY LOG ==================== */
+        
+        .activity-log {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .activity-log h2 {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .log-entries {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .log-entry {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-size: 0.9em;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .log-entry.success {
+            border-left-color: #4ade80;
+        }
+        
+        .log-entry.error {
+            border-left-color: #f87171;
+        }
+        
+        .log-time {
+            font-weight: 600;
+            color: #666;
+            margin-right: 8px;
+        }
+        
+        .log-message {
+            color: #333;
+        }
+        
+        /* ==================== LOADING SPINNER ==================== */
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ==================== RESPONSIVE DESIGN ==================== */
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
+        
+        /* ==================== FOOTER ==================== */
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- ==================== HEADER ==================== -->
+        <div class="header">
+            <h1>📱 Phone Automation Controller</h1>
+            <p>Remote phone control via webhook automation</p>
+        </div>
+        
+        <!-- ==================== STATUS PANEL ==================== -->
+        <div class="status-panel">
+            <div class="status-header">
+                <h2>System Status</h2>
+                <!-- Backend connection indicator -->
+                <div class="status-indicator" id="statusIndicator">
+                    <div class="status-dot offline" id="statusDot"></div>
+                    <span id="statusText">Checking...</span>
+                </div>
+            </div>
+            
+            <!-- Last action executed -->
+            <div class="last-action" id="lastActionPanel">
+                <strong>Last Action:</strong>
+                <div class="action-text" id="lastActionText">No actions executed yet</div>
+                <div class="action-time" id="lastActionTime"></div>
+            </div>
+        </div>
+        
+        <!-- ==================== CONTROL BUTTONS ==================== -->
+        <div class="controls-section">
+            <h2>Phone Actions</h2>
+            <div class="controls-grid">
+                <!-- Button 1: Lock Screen -->
+                <button class="action-button danger" onclick="executeAction('lock')" id="btn-lock">
+                    <span class="button-icon">🔒</span>
+                    <span class="button-text">Lock Screen</span>
+                </button>
+                
+                <!-- Button 2: Block Touch -->
+                <button class="action-button warning" onclick="executeAction('block-touch')" id="btn-block">
+                    <span class="button-icon">🚫</span>
+                    <span class="button-text">Block Touch (10s)</span>
+                </button>
+                
+                <!-- Button 3: Open Site 1 -->
+                <button class="action-button success" onclick="executeAction('open-site1')" id="btn-site1">
+                    <span class="button-icon">🌐</span>
+                    <span class="button-text">Open Site 1</span>
+                </button>
+                
+                <!-- Button 4: Open Site 2 -->
+                <button class="action-button success" onclick="executeAction('open-site2')" id="btn-site2">
+                    <span class="button-icon">🌐</span>
+                    <span class="button-text">Open Site 2</span>
+                </button>
+                
+                <!-- Button 5: Open Site 3 -->
+                <button class="action-button success" onclick="executeAction('open-site3')" id="btn-site3">
+                    <span class="button-icon">🌐</span>
+                    <span class="button-text">Open Site 3</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- ==================== ACTIVITY LOG ==================== -->
+        <div class="activity-log">
+            <h2>Activity Log</h2>
+            <div class="log-entries" id="logEntries">
+                <div class="log-entry">
+                    <span class="log-time">[System]</span>
+                    <span class="log-message">Dashboard initialized. Connecting to backend...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== FOOTER ==================== -->
+        <div class="footer">
+            <p>Phone Automation Controller v1.0 | Powered by Flask + Webhooks</p>
+        </div>
+    </div>
+    
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+        // ==================== CONFIGURATION ====================
+        
+        // Backend API base URL
+        // Change this if your backend runs on a different host or port
+        const API_BASE_URL = 'http://localhost:5000/api';
+        
+        // Status polling interval (milliseconds)
+        const STATUS_POLL_INTERVAL = 3000; // Poll every 3 seconds
+        
+        // Maximum log entries to keep
+        const MAX_LOG_ENTRIES = 20;
+        
+        // ==================== STATE MANAGEMENT ====================
+        
+        // Track if a request is currently in progress
+        let isRequestInProgress = false;
+        
+        // ==================== UTILITY FUNCTIONS ====================
+        
+        /**
+         * Add an entry to the activity log
+         * 
+         * @param {string} message - Log message to display
+         * @param {string} type - 'success', 'error', or 'info'
+         */
+        function addLogEntry(message, type = 'info') {
+            const logEntries = document.getElementById('logEntries');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            // Create log entry element
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `
+                <span class="log-time">[${timestamp}]</span>
+                <span class="log-message">${message}</span>
+            `;
+            
+            // Add to top of log
+            logEntries.insertBefore(entry, logEntries.firstChild);
+            
+            // Limit number of entries
+            while (logEntries.children.length > MAX_LOG_ENTRIES) {
+                logEntries.removeChild(logEntries.lastChild);
+            }
+        }
+        
+        /**
+         * Update the status panel UI
+         * 
+         * @param {boolean} online - Whether backend is online
+         * @param {object} data - Status data from backend
+         */
+        function updateStatusPanel(online, data = null) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const lastActionText = document.getElementById('lastActionText');
+            const lastActionTime = document.getElementById('lastActionTime');
+            
+            if (online && data) {
+                // Backend is online
+                statusDot.className = 'status-dot online';
+                statusText.textContent = 'Backend Online';
+                
+                // Update last action info
+                if (data.last_action) {
+                    const actionName = formatActionName(data.last_action);
+                    const statusIcon = data.last_action_status === 'success' ? '✅' : '❌';
+                    lastActionText.textContent = `${statusIcon} ${actionName}`;
+                    
+                    if (data.last_action_time) {
+                        const time = new Date(data.last_action_time).toLocaleTimeString();
+                        lastActionTime.textContent = `Executed at ${time}`;
+                    }
+                } else {
+                    lastActionText.textContent = 'No actions executed yet';
+                    lastActionTime.textContent = '';
+                }
+            } else {
+                // Backend is offline
+                statusDot.className = 'status-dot offline';
+                statusText.textContent = 'Backend Offline';
+            }
+        }
+        
+        /**
+         * Format action key into readable name
+         * 
+         * @param {string} actionKey - Action key from backend (e.g., 'lock_screen')
+         * @returns {string} - Formatted name (e.g., 'Lock Screen')
+         */
+        function formatActionName(actionKey) {
+            const nameMap = {
+                'lock_screen': 'Lock Screen',
+                'block_touch': 'Block Touch',
+                'open_site1': 'Open Site 1',
+                'open_site2': 'Open Site 2',
+                'open_site3': 'Open Site 3'
+            };
+            return nameMap[actionKey] || actionKey;
+        }
+        
+        /**
+         * Enable or disable all action buttons
+         * 
+         * @param {boolean} disabled - Whether to disable buttons
+         */
+        function setButtonsDisabled(disabled) {
+            const buttons = document.querySelectorAll('.action-button');
+            buttons.forEach(button => {
+                button.disabled = disabled;
+            });
+        }
+        
+        // ==================== API COMMUNICATION ====================
+        
+        /**
+         * Check backend status
+         * 
+         * This function is called periodically to monitor backend health
+         * and update the UI accordingly.
+         */
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatusPanel(true, data);
+                } else {
+                    updateStatusPanel(false);
+                    addLogEntry('Backend returned error status', 'error');
+                }
+            } catch (error) {
+                // Backend is unreachable
+                updateStatusPanel(false);
+                console.error('Backend check failed:', error);
+            }
+        }
+        
+        /**
+         * Execute a phone action
+         * 
+         * This is the main function that sends commands to the backend,
+         * which then forwards them to the phone webhook.
+         * 
+         * @param {string} action - Action to execute ('lock', 'block-touch', etc.)
+         */
+        async function executeAction(action) {
+            // Prevent multiple simultaneous requests
+            if (isRequestInProgress) {
+                addLogEntry('Please wait for previous action to complete', 'error');
+                return;
+            }
+            
+            isRequestInProgress = true;
+            setButtonsDisabled(true);
+            
+            try {
+                addLogEntry(`Sending command: ${formatActionName(action)}...`, 'info');
+                
+                // Send POST request to backend
+                const response = await fetch(`${API_BASE_URL}/${action}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Success
+                    addLogEntry(`✅ ${data.message}`, 'success');
+                } else {
+                    // Failed
+                    addLogEntry(`❌ ${data.message}`, 'error');
+                }
+                
+                // Immediately refresh status to show updated last action
+                await checkBackendStatus();
+                
+            } catch (error) {
+                // Network error
+                addLogEntry(`❌ Connection error: ${error.message}`, 'error');
+                console.error('Action execution failed:', error);
+            } finally {
+                isRequestInProgress = false;
+                setButtonsDisabled(false);
+            }
+        }
+        
+        // ==================== INITIALIZATION ====================
+        
+        /**
+         * Initialize the dashboard
+         * 
+         * Called when the page loads. Sets up periodic status checks
+         * and performs initial backend connection.
+         */
+        function initializeDashboard() {
+            console.log('Initializing Phone Automation Controller...');
+            
+            // Perform initial backend check
+            checkBackendStatus();
+            
+            // Set up periodic status polling
+            setInterval(checkBackendStatus, STATUS_POLL_INTERVAL);
+            
+            addLogEntry('Dashboard loaded successfully', 'success');
+        }
+        
+        // Run initialization when page loads
+        window.addEventListener('load', initializeDashboard);
+        
+        // ==================== KEYBOARD SHORTCUTS ====================
+        
+        // Add keyboard shortcuts for quick actions
+        document.addEventListener('keydown', (event) => {
+            // Only trigger if not typing in an input field
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+                return;
+            }
+            
+            // Ctrl/Cmd + 1-5 for quick actions
+            if (event.ctrlKey || event.metaKey) {
+                switch(event.key) {
+                    case '1':
+                        event.preventDefault();
+                        executeAction('lock');
+                        break;
+                    case '2':
+                        event.preventDefault();
+                        executeAction('block-touch');
+                        break;
+                    case '3':
+                        event.preventDefault();
+                        executeAction('open-site1');
+                        break;
+                    case '4':
+                        event.preventDefault();
+                        executeAction('open-site2');
+                        break;
+                    case '5':
+                        event.preventDefault();
+                        executeAction('open-site3');
+                        break;
+                }
+            }
+        });
+        
+        console.log('Phone Automation Controller loaded. Keyboard shortcuts: Ctrl+1 to Ctrl+5');
+    </script>
+</body>
+</html>
